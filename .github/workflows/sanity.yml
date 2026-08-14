@@ -29,9 +29,11 @@ jobs:
       - name: Secret scan (dependency-free)
         run: |
           echo "Scanning for obvious secrets..."
-          # Test fixtures legitimately use 'secret'/'.secret' as filenames; the
-          # patterns below target real credential shapes only.
-          matches=$(git ls-files -z | xargs -0 grep -I -n -E '(ghp_|github_pat_|AKIA[0-9A-Z]{16}|sk-[a-z0-9]{20,}|BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY)' || true)
+          # The detection pattern below contains literal token fragments (ghp_,
+          # AKIA, sk-, BEGIN ... PRIVATE KEY); this very file would match itself,
+          # so it is excluded from the scan to avoid a false positive. GitHub's
+          # own push-protection still covers real secrets committed elsewhere.
+          matches=$(git grep -I -n -E '(ghp_|github_pat_|AKIA[0-9A-Z]{16}|sk-[a-z0-9]{20,}|BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY)' -- ':!.github/workflows/sanity.yml' || true)
           if [ -n "$matches" ]; then
             echo "ERROR: possible secret found:"; echo "$matches"; exit 1
           fi
