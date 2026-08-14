@@ -1,0 +1,13 @@
+# Build artifacts
+node_modules/
+lib/
+*.tsbuildinfo
+coverage/
+.turbo/
+*.log
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

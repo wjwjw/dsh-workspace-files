@@ -1,0 +1,252 @@
+/* Right-docked workspace explorer shell: the collapsed tab, the panel with
+   its header, the vertical split, and the width handle. */
+
+.root {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 21;
+  display: flex;
+}
+
+/* Closed: pin the root to the collapsed tab strip so the hidden panel's
+   content can never stretch it (a shrink-to-fit container would otherwise
+   push the tab away from the right edge). */
+.root:not([data-open]) {
+  width: 28px;
+}
+
+/* Collapsed strip: a slim floating tab at the right edge. */
+.tab {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 10px 0;
+  width: 28px;
+  border: 1px solid var(--dsw-alias-border-l2-darkmode-thin);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  background: var(--dsw-alias-button-floating-fill);
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+}
+
+.tab:hover {
+  background: var(--dsw-alias-button-floating-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.tab:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--dsw-alias-border-l3);
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--dsw-alias-bg-layer-2);
+  border-left: 1px solid var(--dsw-alias-border-l2);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.08);
+  /* The panel stays mounted while closed (display:none preserves React
+     state) so the tree keeps its loaded listings. */
+}
+
+.panel[data-open] {
+  display: flex;
+}
+
+/* Transient row-action outcome line, floated over the lower section. */
+.notice {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: var(--dsw-alias-tooltip-bg);
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 3;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+}
+
+.header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+}
+
+.title {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+
+.search {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.search:focus-within {
+  border-color: var(--dsw-alias-border-l3);
+}
+
+.searchIcon {
+  flex: 0 0 auto;
+}
+
+.filter {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 2px 0;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.filter:focus {
+  outline: none;
+}
+
+.pill {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 1px 8px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.pill:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
+}
+
+.pill[data-active] {
+  border-color: var(--dsw-alias-state-business-primary);
+  color: var(--dsw-alias-state-business-primary);
+}
+
+.iconBtn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 3px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.iconBtn:focus-visible,
+.pill:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--dsw-alias-border-l3);
+}
+
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+}
+
+.upper {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.lower {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-top: none;
+}
+
+.divider {
+  cursor: row-resize;
+  touch-action: none;
+  background: transparent;
+}
+
+.divider:hover {
+  background: var(--dsw-alias-border-l2);
+}
+
+.sectionHeader {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 4px;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.count {
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+/* Width handle: an 8px hit strip straddling the panel's left border. */
+.widthHandle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 2;
+}

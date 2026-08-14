@@ -1,0 +1,131 @@
+/* Modified-files list: compact rows with a settlement dot and tool badge. */
+
+.list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 4px 0 8px;
+  overflow: auto;
+  list-style: none;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.empty {
+  padding: 8px 12px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+/* One row wrapper: the reveal button plus the trailing actions trigger. */
+.item {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0 4px 0 2px;
+  border-radius: 6px;
+}
+
+.item:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.row {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 3px 4px 3px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:hover .row {
+  color: var(--dsw-alias-label-primary);
+}
+
+.row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--dsw-alias-border-l3);
+}
+
+.dot {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dsw-alias-label-tertiary);
+}
+
+.dot[data-state='running'] {
+  background: var(--dsw-alias-state-business-primary);
+}
+
+.dot[data-state='error'] {
+  background: var(--dsw-alias-state-error-primary);
+}
+
+.dot[data-state='ok'] {
+  background: var(--dsw-alias-state-success-primary);
+}
+
+.text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--dsw-alias-label-primary);
+}
+
+.dir {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.meta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tool {
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.state {
+  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.state[data-state='running'] {
+  color: var(--dsw-alias-state-business-primary);
+}
+
+.state[data-state='error'] {
+  color: var(--dsw-alias-state-error-primary);
+}
