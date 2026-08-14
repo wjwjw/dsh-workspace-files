@@ -1,0 +1,38 @@
+name: sanity
+
+# Runs on the standalone mirror without needing the deepseek-harness monorepo.
+# The real build/test CI lives inside deepseek-harness (peer deps are workspace:*).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  repo-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify no build artifacts or archives are tracked
+        run: |
+          echo "Checking for accidentally tracked artifacts..."
+          offending=$(git ls-files | grep -E 'node_modules/|/lib/|\.tsbuildinfo$|\.zip$' || true)
+          if [ -n "$offending" ]; then
+            echo "ERROR: tracked files that should be gitignored:"; echo "$offending"; exit 1
+          fi
+          echo "OK: no build artifacts or archives tracked."
+
+      - name: Secret scan (dependency-free)
+        run: |
+          echo "Scanning for obvious secrets..."
+          # Test fixtures legitimately use 'secret'/'.secret' as filenames; the
+          # patterns below target real credential shapes only.
+          matches=$(git ls-files -z | xargs -0 grep -I -n -E '(ghp_|github_pat_|AKIA[0-9A-Z]{16}|sk-[a-z0-9]{20,}|BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY)' || true)
+          if [ -n "$matches" ]; then
+            echo "ERROR: possible secret found:"; echo "$matches"; exit 1
+          fi
+          echo "OK: no obvious secrets."
