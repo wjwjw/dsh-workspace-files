@@ -43,8 +43,16 @@ async function bench(declare = true) {
     reveal: vi.fn(async (...args: unknown[]) => { calls.push({ method: 'reveal', args }); return { ok: true, value: { ok: true, value: { path: '/ws/a.txt' } } } }),
     stat: vi.fn(async (...args: unknown[]) => { calls.push({ method: 'stat', args }); return { ok: true, value: { path: '/ws', kind: 'directory', size: null } } }),
   }
+  // The client apply self-mounts the workspace-files Remote onto the shared
+  // `remote` service; stub $mount as a no-op (returning a disposer) and keep
+  // the fake namespace provided directly, so the verbs under test still reach
+  // the fake.
+  const mountRemote = vi.fn(async () => () => {})
   class RemoteService extends Service {
-    constructor(serviceCtx: Context) { super(serviceCtx, 'remote') }
+    constructor(serviceCtx: Context) {
+      super(serviceCtx, 'remote')
+      this.$mount = mountRemote
+    }
   }
   new RemoteService(ctx)
   ctx.provide('remote.workspaceFiles', workspaceFiles)
@@ -68,7 +76,7 @@ async function bench(declare = true) {
   }
   const fiber = ctx.plugin({ inject: [...inject], apply })
   return {
-    ctx, fiber, slots, sessions, workspaceFiles, conversation, setDraft, connection,
+    ctx, fiber, slots, sessions, workspaceFiles, conversation, setDraft, connection, mountRemote,
     entry: () => slots.entries('shell.overlay')[0],
   }
 }
@@ -81,7 +89,8 @@ function cleanupCtxs() {
 
 describe('ui-workspace-files apply', () => {
   it('declares only the services it uses', () => {
-    expect(inject).toEqual(['slots', 'locale', 'connection', 'sessions', 'conversation', 'remote', 'remote.workspaceFiles'])
+    // `remote.workspaceFiles` must NOT appear: the apply mounts it itself.
+    expect(inject).toEqual(['slots', 'locale', 'connection', 'sessions', 'conversation', 'remote'])
   })
 
   it('registers the shell.overlay dock entry with store, locale, and injected face', async () => {
@@ -93,6 +102,8 @@ describe('ui-workspace-files apply', () => {
     if (entry === undefined) return
     expect(entry.locale).toBe('workspace-files')
     expect(entry.store).toBeDefined()
+    // The apply self-mounts the Remote namespace onto the shared service.
+    expect(b.mountRemote).toHaveBeenCalledTimes(1)
     const face = entry.inject as unknown as () => WorkspaceFilesInjected
     const injected = face()
     expect(Object.keys(injected.hooks)).toEqual(['hostDescription', 'modifiedFiles'])

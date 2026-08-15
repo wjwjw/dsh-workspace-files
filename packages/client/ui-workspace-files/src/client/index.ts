@@ -10,6 +10,7 @@ import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client
 // Type-only: pulls the generated workspaceFiles Remote API and ctx.remote merge.
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type {} from '@deepseek-ai/dsh-host-workspace-files/remote'
+import workspaceFilesRemote from '@deepseek-ai/dsh-host-workspace-files/remote'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 // Type-only: pulls the conversation service face (ctx.conversation.input).
@@ -34,13 +35,22 @@ export type { WorkspaceFilesKey } from './locales.ts'
 export { createWorkspaceFilesStore } from './store.ts'
 
 /** Required services for the overlay registration, its dictionaries, and its callbacks. */
-export const inject = ['slots', 'locale', 'connection', 'sessions', 'conversation', 'remote', 'remote.workspaceFiles']
+export const inject = ['slots', 'locale', 'connection', 'sessions', 'conversation', 'remote']
 
 /**
- * Client plugin body: register the dictionaries and the overlay dock entry.
+ * Client plugin body: mount the workspace-files Remote namespace onto the
+ * shared `remote` service (the host-side api-remotes bundle no longer mounts
+ * it — this plugin owns its Remote, which is what lets it install standalone
+ * through its bundle), then register the dictionaries and the overlay dock
+ * entry.
  * @param ctx - client root context.
  */
-export function apply(ctx: ClientContext): void {
+export async function apply(ctx: ClientContext): Promise<() => Promise<void>> {
+  // `remote` is provided by the api-gateway client half; `remote.workspaceFiles`
+  // becomes available only after this mount, so it must not appear in inject
+  // (an inject entry would wait for a service this apply itself creates).
+  const disposeRemote = await ctx.remote.$mount(workspaceFilesRemote)
+
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-workspace-files: dictionaries')
 
   const connection = ctx.get('connection') as ConnectionHandle
@@ -105,4 +115,8 @@ export function apply(ctx: ClientContext): void {
       },
     }),
   }, WorkspaceFilesDock))
+
+  // Unwind the Remote namespace before the fiber's own effects run their
+  // disposal.
+  return async () => { await disposeRemote() }
 }
