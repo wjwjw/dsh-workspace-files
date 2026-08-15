@@ -1,0 +1,1 @@
+{"version":3,"file":"typert.remote-client.d.ts","names":["list","open","read","reveal","stat","write"],"sources":["../src/index.ts"],"sourcesContent":[null],"mappings":";;;;;;;;;IA0LQA,I;IAmJAC,I;IA5GAC,I;IAuFAC,M;IAxDAC,I;IA4BAC,K;;;IAlGAL,qB;IAmJAC,qB;IA5GAC,qB;IAuFAC,uB;IAxDAC,qB;IA4BAC,sB","ignoreList":[]}
