@@ -46,35 +46,13 @@
     "watch": "tsdown --watch"
   },
   "license": "MIT",
-  "peerDependencies": {
-    "@deepseek-ai/dsh-client-connection": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-locale": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-runtime": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-ui-slots": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-ui-primitives": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-ui-layout": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-ui-conversation": "0.0.1-rc.1",
+  "dependencies": {
     "@deepseek-ai/dsh-host-workspace-files": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "0.0.1-rc.1",
-    "@deepseek-ai/cordis": "4.0.1",
-    "diff": "^9.0.0",
     "react": "^18.2.0"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-client-connection": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-locale": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-runtime": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-test-runtime": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-ui-slots": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-ui-primitives": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-ui-layout": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-client-ui-conversation": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-host-workspace-files": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "0.0.1-rc.1",
     "@testing-library/react": "^16.1.0",
     "@types/react": "~18.3.1",
-    "@deepseek-ai/cordis": "4.0.1",
-    "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "files": [

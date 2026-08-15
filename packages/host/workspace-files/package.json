@@ -51,19 +51,5 @@
   "dependencies": {
     "zod": "^4.4.3"
   },
-  "peerDependencies": {
-    "@deepseek-ai/dsh-fs": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-invariants": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-native-command": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-typert-protocol": "0.1.0-rc.6",
-    "@deepseek-ai/cordis": "4.0.1"
-  },
-  "devDependencies": {
-    "@deepseek-ai/dsh-fs": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-fs-local": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-invariants": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-native-command": "0.0.1-rc.1",
-    "@deepseek-ai/dsh-typert-protocol": "0.1.0-rc.6",
-    "@deepseek-ai/cordis": "4.0.1"
-  }
+  "devDependencies": {}
 }

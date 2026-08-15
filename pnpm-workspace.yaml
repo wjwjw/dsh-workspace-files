@@ -1,2 +1,9 @@
 packages:
   - 'packages/*/*'
+
+# dsh already ships the @deepseek-ai/* core as peers at runtime, so we must
+# not auto-install them here (some, e.g. dsh-compact, are not published to
+# npm and would 404), and a missing peer must not be a hard error.
+pnpm:
+  autoInstallPeers: false
+  strictPeerDependencies: false
