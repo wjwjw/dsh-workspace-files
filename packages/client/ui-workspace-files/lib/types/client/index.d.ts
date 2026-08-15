@@ -20,8 +20,12 @@ export { createWorkspaceFilesStore } from './store.ts';
 /** Required services for the overlay registration, its dictionaries, and its callbacks. */
 export declare const inject: string[];
 /**
- * Client plugin body: register the dictionaries and the overlay dock entry.
+ * Client plugin body: mount the workspace-files Remote namespace onto the
+ * shared `remote` service (the host-side api-remotes bundle no longer mounts
+ * it — this plugin owns its Remote, which is what lets it install standalone
+ * through its bundle), then register the dictionaries and the overlay dock
+ * entry.
  * @param ctx - client root context.
  */
-export declare function apply(ctx: ClientContext): void;
+export declare function apply(ctx: ClientContext): Promise<() => Promise<void>>;
 //# sourceMappingURL=index.d.ts.map

@@ -1,15 +1,12 @@
-/** Host loader entry for the browser-only workspace-files plugin. */
-import type { Context } from '@deepseek-ai/cordis';
-/** Require the shared Remote client surface before mounting onto it. */
-export declare const inject: string[];
 /**
- * Mount the workspace-files Remote namespace onto the shared `remote` service
- * so the browser half can read `ctx.remote.workspaceFiles`. The host-side
- * `api-remotes` bundle no longer mounts it: this plugin owns its Remote, which
- * is what lets it install standalone (through its `@deepseek-ai/dsh-bundle-workspace-files`
- * bundle) instead of being hardcoded into the web-app bundle.
- * @param ctx - Client Cordis root carrying the typed Remote service.
- * @returns disposer that unmounts the namespace.
+ * Host loader entry for the browser-only workspace-files plugin.
+ *
+ * The browser half ships via exports["./client"], discovered through the
+ * package.json dsh.client declaration. The Remote namespace is mounted from
+ * the browser-side apply (src/client/index.ts) onto the shared `remote`
+ * service — that service only exists in the browser, so no host-side
+ * behavior belongs here.
  */
-export declare function apply(ctx: Context): Promise<() => Promise<void>>;
+/** Host plugin body — no host-side behavior for the workspace-files plugin. */
+export declare function apply(): void;
 //# sourceMappingURL=index.d.ts.map
