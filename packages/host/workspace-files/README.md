@@ -13,7 +13,7 @@ Workspace file browsing Remote for the web GUI explorer. `WorkspaceFilesGateway`
 
 `list`, `read`, and `stat` are deliberate read-only browsing primitives; `write` is the only mutation and is fenced like every other `ctx.fs` mutation. Failures map from `ctx.fs`'s closed `FsErrorCode` vocabulary to the typed `WorkspaceFilesFailure` union in `./types`, so the browser branches on business codes instead of messages. Typert generates the Host and Client Remote artifacts exposed by `./typert` and `./remote`.
 
-The service is Remote-only and deliberately declares no same-process Cordis `Context` merge. Client packages consume it through the explicit `api-remotes` assembly rather than importing the Host implementation — see the [dsh-workspace-files README](../../../README.md) for how this package and the client plugin wire together.
+The service is Remote-only and deliberately declares no same-process Cordis `Context` merge. The browser half mounts it through the plugin's own `apply()` — `ui-workspace-files` self-mounts `workspaceFilesRemote` onto the shared `ctx.remote` service, so no hardcoded harness Remote roster is involved — see the [dsh-workspace-files README](../../../README.md) for how this package and the client plugin wire together.
 
 ## Model Experience
 

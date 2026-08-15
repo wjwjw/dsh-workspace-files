@@ -13,7 +13,7 @@
 
 `list`、`read` 与 `stat` 是刻意只读的浏览原语；`write` 是唯一的修改操作，与其它 `ctx.fs` 修改一样受围栏约束。失败从 `ctx.fs` 的封闭 `FsErrorCode` 词表映射到 `./types` 中类型化的 `WorkspaceFilesFailure` 联合，浏览器据此按业务码分支而不是解析消息文本。Typert 生成由 `./typert` 与 `./remote` 导出的 Host 与 Client Remote 产物。
 
-该服务仅供 Remote 使用，刻意不声明同进程 Cordis `Context` merge。Client 包通过显式的 `api-remotes` 组合消费它，而不导入 Host 实现——两包的接线方式见仓库级 [dsh-workspace-files 说明](../../../README.md)。
+该服务仅供 Remote 使用，刻意不声明同进程 Cordis `Context` merge。浏览器端通过插件自身的 `apply()` 挂载它——`ui-workspace-files` 把 `workspaceFilesRemote` 自挂到共享的 `ctx.remote` 服务上，不依赖 harness 写死的远端名册——两包的接线方式见仓库级 [dsh-workspace-files 说明](../../../README.md)。
 
 ## 模型体验
 

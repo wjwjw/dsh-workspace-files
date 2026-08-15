@@ -4,7 +4,7 @@
 
 [English](README.md)
 
-> 本仓库包含构成本插件的三个包——宿主侧 Remote 服务、浏览器端插件，以及一个可独立安装的 profile bundle——便于独立审查、归档与分发。仓库根为 pnpm 工作区（`package.json` + `pnpm-workspace.yaml`），三个包可一并 `pnpm publish -r` 发布或本地安装测试；但编译出 `lib/` 仍需在 deepseek-harness 工作区内进行（见 [构建与测试](#构建与测试)）。
+> 本仓库包含构成本插件的三个包——宿主侧 Remote 服务、浏览器端插件，以及一个把它们组合起来的可独立安装的 profile bundle——便于独立审查、归档与分发。仓库根为 pnpm 工作区（`package.json` + `pnpm-workspace.yaml`），三个包可一并 `pnpm publish -r` 发布或本地安装测试；但编译出 `lib/` 仍需在 deepseek-harness 工作区内进行（见 [构建与测试](#构建与测试)）。
 
 ## 功能特性
 
@@ -18,7 +18,7 @@
 
 ## 架构
 
-插件由两个包组成，通过 DSH 的 Remote（Typert）接缝协作：
+插件由两个运行时包组成，通过 DSH 的 Remote（Typert）接缝协作（外加一个把它们组合安装的 bundle）：
 
 | 包 | 职责 |
 | --- | --- |
@@ -41,7 +41,7 @@ packages/
 1. **独立 bundle（推荐，第三方开箱即装）**——本仓库的 `packages/bundle/workspace-files` 是一个声明了 `dsh.bundle.patch` 的包，它在自己的 `cordis.patch.yml` 里登记宿主行 `workspace-files` 与客户端行 `ui-workspace-files`，并依赖另外两个包。任何 dsh 只需 `dsh plugin --profile <name> add @deepseek-ai/dsh-bundle-workspace-files`，pnpm 装包后便自动激活该 bundle，无需改动 harness 源码。
 2. **合并进 monorepo**——把三个包拷进 `packages/` 的对应位置，在 `tsconfig.client.json` / `tsconfig.host.json` 增加 references，并把 `packages/bundle/workspace-files` 加为 `packages/bundle/web-app` 的依赖（若 harness 已硬编码这两行，需先从 `web-app/cordis.patch.yml` 与 `api/remotes` 移除，避免重复注册）。
 
-**Remote 由插件自挂载**：浏览器端 `ui-workspace-files` 的 `apply()` 直接把 `workspaceFilesRemote` 挂到共享的 `ctx.remote` 服务上（`packages/api/remotes` 不再硬编码它），所以插件自带 Remote，可脱离 harness 的远端名册独立工作。对 harness 核心包（如 `@deepseek-ai/dsh-fs`、`dsh-invariants`、`dsh-client-*`、`dsh-api-remotes`、`dsh-typert-protocol`、`cordis` 等）的依赖已钉到它们在公共 npm 上**实际发布的版本**——这些包各自独立发布、并非统一版本：`@deepseek-ai/cordis` 为 `4.0.1`、`@deepseek-ai/dsh-typert-protocol` 为 `0.1.0-rc.6`，其余为 `0.0.1-rc.1`。只有三个插件包之间的依赖保留 `workspace:^`，在 `pnpm publish` 时自动改写成插件自身版本。注意：本仓库不含 `lib/` 构建产物，发布前需先在 deepseek-harness 内 `pnpm build:lib:host && pnpm build:lib:client` 构建出 `lib/`，再拷回本仓库对应包目录（见 [构建与测试](#构建与测试)）。
+**Remote 由插件自挂载**：浏览器端 `ui-workspace-files` 的 `apply()` 直接把 `workspaceFilesRemote` 挂到共享的 `ctx.remote` 服务上（`packages/api/remotes` 不再硬编码它），所以插件自带 Remote，可脱离 harness 的远端名册独立工作。对 harness 核心包（如 `@deepseek-ai/dsh-fs`、`dsh-invariants`、`dsh-client-*`、`dsh-api-remotes`、`dsh-typert-protocol`、`cordis` 等）的依赖已钉到它们在公共 npm 上**实际发布的版本**——这些包各自独立发布、并非统一版本：`@deepseek-ai/cordis` 为 `4.0.1`、`@deepseek-ai/dsh-typert-protocol` 为 `0.1.0-rc.6`，其余为 `0.0.1-rc.1`。只有三个插件包之间的依赖保留 `workspace:^`，在 `pnpm publish` 时自动改写成插件自身版本。已构建的 `lib/` 产物与源码一同入库（它们由 harness 的 Typert 工具链生成，因此在本仓库内改源码后，需先在 deepseek-harness 内重新构建，再把刷新后的 `lib/` 目录拷回——见 [构建与测试](#构建与测试)）。
 
 ## 安装
 
@@ -78,7 +78,7 @@ pnpm build:lib:client   # 客户端（全量 tsc 类型检查 + 浏览器 bundle
 pnpm vitest run packages/host/workspace-files packages/client/ui-workspace-files
 ```
 
-测试：**50 项全部通过**——宿主 10（gateway 9 + invariant 1），客户端 40（修改文件派生 17、源保留 5、apply 5、dock 12、invariant 1）。dock 测例为 jsdom 组件测试；由于 jsdom 不应用 CSS，可见性断言均基于 data 属性。
+测试：**52 项全部通过**——宿主 10（gateway 9 + invariant 1），客户端 42（修改文件派生 19、源保留 5、apply 5、dock 12、invariant 1）。dock 测例为 jsdom 组件测试；由于 jsdom 不应用 CSS，可见性断言均基于 data 属性。
 
 ## 已知限制
 
