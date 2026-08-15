@@ -1,0 +1,7 @@
+{
+  "name": "dsh-workspace-files",
+  "version": "0.0.1-rc.1",
+  "private": true,
+  "description": "Source + publishable pnpm workspace for the dsh workspace-files plugin: the host Remote service, the browser dock, and an installable profile bundle.",
+  "license": "MIT"
+}
