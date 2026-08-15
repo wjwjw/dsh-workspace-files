@@ -4,7 +4,7 @@
 
 [English](README.md)
 
-> 本仓库包含构成本插件的两个包（deepseek-harness monorepo 内的浏览器端插件与宿主侧 Remote 服务），便于独立审查、归档与分发；构建与测试仍需在 deepseek-harness 工作区内进行（见 [构建与测试](#构建与测试)）。
+> 本仓库包含构成本插件的三个包——宿主侧 Remote 服务、浏览器端插件，以及一个可独立安装的 profile bundle——便于独立审查、归档与分发。仓库根为 pnpm 工作区（`package.json` + `pnpm-workspace.yaml`），三个包可一并 `pnpm publish -r` 发布或本地安装测试；但编译出 `lib/` 仍需在 deepseek-harness 工作区内进行（见 [构建与测试](#构建与测试)）。
 
 ## 功能特性
 
@@ -29,23 +29,47 @@
 
 ```
 packages/
-├── host/workspace-files/        # 宿主 Remote 服务（src、tests、types、README）
-└── client/ui-workspace-files/   # 浏览器插件（src、tests、README）
+├── host/workspace-files/          # 宿主 Remote 服务(src、tests、types、README)
+├── client/ui-workspace-files/     # 浏览器插件(src、tests、README)
+└── bundle/workspace-files/        # 可独立安装的 dsh bundle(cordis.patch.yml + 对前两包的依赖)
 ```
 
 ## 接入 DSH Web
 
-插件作为 deepseek-harness monorepo 的一部分接入 web-app bundle：
+插件以两种形态接入，二者选一：
 
-1. **引用**——在 `tsconfig.client.json` / `tsconfig.host.json` 中新增两个包的 references。
-2. **Remote 挂载**——`packages/api/remotes` 增加 `workspaceFilesRemote` 客户端挂载，并在 `packages/api/remotes/package.json` 增加对宿主包的依赖。
-3. **Bundle 名册**——`packages/bundle/web-app/cordis.patch.yml` 增加宿主行 `workspace-files` 与客户端行 `ui-workspace-files`；客户端行 inject `slots, locale, connection, sessions, conversation, remote, remote.workspaceFiles`。
+1. **独立 bundle（推荐，第三方开箱即装）**——本仓库的 `packages/bundle/workspace-files` 是一个声明了 `dsh.bundle.patch` 的包，它在自己的 `cordis.patch.yml` 里登记宿主行 `workspace-files` 与客户端行 `ui-workspace-files`，并依赖另外两个包。任何 dsh 只需 `dsh plugin --profile <name> add @deepseek-ai/dsh-bundle-workspace-files`，pnpm 装包后便自动激活该 bundle，无需改动 harness 源码。
+2. **合并进 monorepo**——把三个包拷进 `packages/` 的对应位置，在 `tsconfig.client.json` / `tsconfig.host.json` 增加 references，并把 `packages/bundle/workspace-files` 加为 `packages/bundle/web-app` 的依赖（若 harness 已硬编码这两行，需先从 `web-app/cordis.patch.yml` 与 `api/remotes` 移除，避免重复注册）。
 
-monorepo 内两个包以 `workspace:*` 解析 peer 依赖；本仓库保持清单不变，拷回 `packages/` 即可原样构建。
+**Remote 由插件自挂载**：浏览器端 `ui-workspace-files` 的 `apply()` 直接把 `workspaceFilesRemote` 挂到共享的 `ctx.remote` 服务上（`packages/api/remotes` 不再硬编码它），所以插件自带 Remote，可脱离 harness 的远端名册独立工作。对 harness 核心包（如 `@deepseek-ai/dsh-fs`、`dsh-invariants`、`dsh-client-*`、`dsh-api-remotes`、`dsh-typert-protocol`、`cordis` 等）的依赖已钉到它们在公共 npm 上**实际发布的版本**——这些包各自独立发布、并非统一版本：`@deepseek-ai/cordis` 为 `4.0.1`、`@deepseek-ai/dsh-typert-protocol` 为 `0.1.0-rc.6`，其余为 `0.0.1-rc.1`。只有三个插件包之间的依赖保留 `workspace:^`，在 `pnpm publish` 时自动改写成插件自身版本。注意：本仓库不含 `lib/` 构建产物，发布前需先在 deepseek-harness 内 `pnpm build:lib:host && pnpm build:lib:client` 构建出 `lib/`，再拷回本仓库对应包目录（见 [构建与测试](#构建与测试)）。
+
+## 安装
+
+### 第三方开箱即装（推荐）
+
+插件以 `@deepseek-ai/dsh-bundle-workspace-files` 形式发布。在已装好 dsh 的机器上：
+
+```bash
+dsh plugin --profile web add @deepseek-ai/dsh-bundle-workspace-files
+```
+
+该命令会在 `$DSH_HOME/profiles/web` 里转发 pnpm 安装此 bundle，并因它声明了 `dsh.bundle` 而自动把它登记为 profile 的一层；重载 dsh 后即可看到右侧"工作区文件"面板。
+
+> 注意：若你的 dsh 是从 deepseek-harness 源码构建、且 `web-app/cordis.patch.yml` 已硬编码了 `workspace-files` / `ui-workspace-files` 两行，直接安装会与 bundle 重复注册同名插件。两种处理：① 把面板装进一个**不含**这两行的 profile（如自定义 profile）；② 在 harness 侧移除这两行及 `api/remotes` 里的 `workspaceFilesRemote`（见上文"合并进 monorepo"），再安装 bundle。
+
+### 从源码合并（开发者）
+
+把本仓库的 `packages/` 整体拷进 `deepseek-harness/packages/`，按上文"接入 DSH Web"接线后构建：
+
+```bash
+pnpm install
+pnpm build:lib:host
+pnpm build:lib:client
+```
 
 ## 构建与测试
 
-在 deepseek-harness 工作区内执行（本仓库仅含源码，无工作区配置）：
+在 deepseek-harness 工作区内执行（本仓库虽为 pnpm 工作区，但三个包的 `lib/` 由 harness 的 tsdown 统一构建）：
 
 ```bash
 pnpm install            # 新增 workspace 依赖后

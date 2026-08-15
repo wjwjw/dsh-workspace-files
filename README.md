@@ -29,23 +29,47 @@ The two halves never share an implementation: the client consumes the Typert-gen
 
 ```
 packages/
-├── host/workspace-files/        # Host Remote service (src, tests, types, README)
-└── client/ui-workspace-files/   # Browser plugin (src, tests, README)
+├── host/workspace-files/          # Host Remote service (src, tests, types, README)
+├── client/ui-workspace-files/     # Browser plugin (src, tests, README)
+└── bundle/workspace-files/        # Installable dsh bundle (cordis.patch.yml + deps on the two)
 ```
 
 ## Integration into DSH Web
 
-The plugin is wired into the web app bundle as part of the deepseek-harness monorepo:
+The plugin integrates in either of two shapes:
 
-1. **References** — add both packages to `tsconfig.client.json` / `tsconfig.host.json`.
-2. **Remote mount** — `packages/api/remotes` gains the `workspaceFilesRemote` client mount and `packages/api/remotes/package.json` the host package dependency.
-3. **Bundle roster** — `packages/bundle/web-app/cordis.patch.yml` lists the host row `workspace-files` and the client row `ui-workspace-files`; the client row injects `slots, locale, connection, sessions, conversation, remote, remote.workspaceFiles`.
+1. **Standalone bundle (recommended, third-party open-box install)** — this repository's `packages/bundle/workspace-files` is a package that declares `dsh.bundle.patch`: its own `cordis.patch.yml` lists the host row `workspace-files` and the client row `ui-workspace-files`, and depends on the other two packages. Any dsh only needs `dsh plugin --profile <name> add @deepseek-ai/dsh-bundle-workspace-files`; pnpm installs the bundle and, because it declares `dsh.bundle`, automatically activates it as a profile layer — no harness source changes.
+2. **Merge into the monorepo** — copy the three packages into `packages/`, add references to `tsconfig.client.json` / `tsconfig.host.json`, and add `packages/bundle/workspace-files` as a dependency of `packages/bundle/web-app` (if the harness already hardcodes those two rows, remove them from `web-app/cordis.patch.yml` and `api/remotes` first to avoid duplicate registration).
 
-Inside the monorepo the packages build with `workspace:*` peer resolution; this repository keeps those manifests untouched so a copy dropped back into `packages/` builds as-is.
+**The Remote is self-mounted**: the browser-half `ui-workspace-files` `apply()` mounts `workspaceFilesRemote` directly onto the shared `ctx.remote` service (so `packages/api/remotes` no longer hardcodes it) — the plugin carries its own Remote and works without the harness Remote roster. Dependencies on harness core packages (e.g. `@deepseek-ai/dsh-fs`, `dsh-invariants`, `dsh-client-*`, `dsh-api-remotes`, `dsh-typert-protocol`, `cordis`) are pinned to the versions those packages are **actually published at** on npm — they are released independently, not as one version: `@deepseek-ai/cordis` is `4.0.1`, `@deepseek-ai/dsh-typert-protocol` is `0.1.0-rc.6`, the rest are `0.0.1-rc.1`. Only the dependencies between the three plugin packages keep `workspace:^`, which `pnpm publish` rewrites to the plugin's own version. Note: this repository does not contain built `lib/` artifacts — before publishing, build them inside deepseek-harness with `pnpm build:lib:host && pnpm build:lib:client` and copy the `lib/` directories back into the corresponding packages here (see [Build & test](#build--test)).
+
+## Install
+
+### Third-party open-box install (recommended)
+
+The plugin publishes as `@deepseek-ai/dsh-bundle-workspace-files`. On a machine with dsh installed:
+
+```bash
+dsh plugin --profile web add @deepseek-ai/dsh-bundle-workspace-files
+```
+
+This forwards pnpm to install the bundle under `$DSH_HOME/profiles/web` and, because it declares `dsh.bundle`, automatically registers it as a profile layer; reload dsh to see the right-docked "Workspace files" panel.
+
+> Note: if your dsh is built from deepseek-harness source and `web-app/cordis.patch.yml` already hardcodes the `workspace-files` / `ui-workspace-files` rows, installing the bundle duplicates those plugin ids. Either install into a profile that does **not** contain those rows (e.g. a custom profile), or remove the two rows and `workspaceFilesRemote` from `api/remotes` on the harness side (see "Merge into the monorepo") before installing the bundle.
+
+### Merge from source (developer)
+
+Copy this repository's `packages/` into `deepseek-harness/packages/`, wire as described in "Integration into DSH Web", then build:
+
+```bash
+pnpm install
+pnpm build:lib:host
+pnpm build:lib:client
+```
 
 ## Build & test
 
-Run inside the deepseek-harness workspace (this repository contains sources only — no workspace config):
+Run inside the deepseek-harness workspace (this repository is now a pnpm workspace, but the three packages' lib/ is built by harness's tsdown):
 
 ```bash
 pnpm install            # after adding workspace deps
