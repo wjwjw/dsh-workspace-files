@@ -1,0 +1,10 @@
+# dsh-bundle-workspace-files — self-contained install unit for the
+# workspace-files plugin. The browser half self-mounts its Remote onto the
+# shared `remote` service (see @deepseek-ai/dsh-client-ui-workspace-files),
+# so this bundle installs standalone via
+# `dsh plugin --profile <name> add @deepseek-ai/dsh-bundle-workspace-files`
+# without the web-app bundle hardcoding either row.
+- id: workspace-files
+  name: '@deepseek-ai/dsh-host-workspace-files'
+- id: ui-workspace-files
+  name: '@deepseek-ai/dsh-client-ui-workspace-files'
