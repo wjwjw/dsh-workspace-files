@@ -10,7 +10,7 @@ import type {
 } from '@deepseek-ai/dsh-client-runtime/client'
 import {
   deriveModifiedFiles, isAbsolutePath, mergeCallRecord, pathFromArgs, projectModifiedFiles,
-  resolveAgainstCwd, writeOperationFromMeta, type CallRecord,
+  resolveAgainstCwd, writeOperationFromMeta, type CallRecord, type ModifiedFileState,
 } from '../src/client/modified-files.ts'
 
 const sid = 'session-1'
@@ -204,7 +204,7 @@ describe('mergeCallRecord', () => {
 })
 
 describe('projectModifiedFiles', () => {
-  const record = (callId: string, seq: number, path: string, tool: string, state: 'ok' | 'error' = 'ok'): CallRecord => ({
+  const record = (callId: string, seq: number, path: string, tool: string, state: ModifiedFileState = 'ok'): CallRecord => ({
     callId, path, tool, time: 1000 + seq, seq, state,
   })
 
@@ -217,5 +217,28 @@ describe('projectModifiedFiles', () => {
     expect(projected).toHaveLength(2)
     expect(projected[0]).toMatchObject({ path: '/ws/same.txt', tool: 'edit', seq: 2 })
     expect(projected[1]).toMatchObject({ path: '/ws/other.txt', tool: 'write', seq: 3 })
+  })
+
+  it('keeps a settled entry instead of letting a running follow-up downgrade it', () => {
+    // The same path was written (ok) then re-written while the new edit is
+    // still running: the display must keep the settled ok, not flicker to
+    // "running" just because the later record sorts after it.
+    const projected = projectModifiedFiles([
+      record('c1', 1, '/ws/same.txt', 'write', 'ok'),
+      record('c2', 2, '/ws/same.txt', 'edit', 'running'),
+    ])
+    expect(projected).toHaveLength(1)
+    expect(projected[0]).toMatchObject({ path: '/ws/same.txt', tool: 'write', state: 'ok', seq: 1 })
+  })
+
+  it('lets a settled follow-up supersede an earlier running entry', () => {
+    // Reverse order: an in-flight edit is replaced once it settles — the
+    // higher rank (and later seq) wins, exactly like the merge rule.
+    const projected = projectModifiedFiles([
+      record('c1', 1, '/ws/same.txt', 'edit', 'running'),
+      record('c2', 2, '/ws/same.txt', 'edit', 'ok'),
+    ])
+    expect(projected).toHaveLength(1)
+    expect(projected[0]).toMatchObject({ path: '/ws/same.txt', state: 'ok', seq: 2 })
   })
 })

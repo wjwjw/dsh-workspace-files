@@ -224,7 +224,10 @@ export function deriveModifiedCalls(
 /**
  * Project call records to the display list. Paths keep first-seen order and
  * appear once; a file written then edited is one entry carrying the later
- * call's data (the last write wins the display).
+ * call's data. Settlement rank governs the overwrite just as it does the
+ * merge: a settled outcome outranks a running follow-up on the same path, so
+ * a file that was successfully edited earlier does not flicker back to
+ * "running" while a later edit is in flight.
  * @param calls - call records in first-seen order.
  * @returns the display list, one entry per distinct path.
  */
@@ -241,7 +244,12 @@ export function projectModifiedFiles(calls: readonly CallRecord[]): readonly Mod
     }
     const existing = result.findIndex(item => item.path === entry.path)
     if (existing === -1) result.push(entry)
-    else result[existing] = entry
+    else {
+      const current = result[existing]
+      if (current === undefined || STATE_RANK[mutation.state] >= STATE_RANK[current.state]) {
+        result[existing] = entry
+      }
+    }
   }
   return result
 }
